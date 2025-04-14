@@ -1,3 +1,0 @@
-q2_configs:
-  data_root: "../inaturalist_data/nature_12K_extracted/inaturalist_12K"
-  resize_dim: 480

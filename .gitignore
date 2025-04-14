@@ -1,2 +1,3 @@
 __pycache__/
-inaturalist_data/*
+inaturalist_data
+wandb

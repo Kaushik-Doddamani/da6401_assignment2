@@ -1,0 +1,8 @@
+solution_1_configs:
+  data_zip_path: "inaturalist_data/nature_12K.zip"
+  extracted_data_dir: "inaturalist_data/nature_12K_extracted"
+
+
+q2_configs:
+  data_root: "../inaturalist_data/nature_12K_extracted/inaturalist_12K"
+  resize_dim: 480
