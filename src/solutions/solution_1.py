@@ -10,7 +10,7 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from src.models.torch_implementation import MyCNN
+from src.models.implementation import MyCNN
 from src.utils.data_utils import load_single_image
 from src.utils.common_utils import extract_data_if_needed
 

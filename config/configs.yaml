@@ -2,7 +2,11 @@ solution_1_configs:
   data_zip_path: "inaturalist_data/nature_12K.zip"
   extracted_data_dir: "inaturalist_data/nature_12K_extracted"
 
-
-q2_configs:
-  data_root: "../inaturalist_data/nature_12K_extracted/inaturalist_12K"
+solution_2_configs:
+  data_root: "inaturalist_data/nature_12K_extracted/inaturalist_12K"
+  gpu_count: 4
   resize_dim: 480
+  wandb_project: "DA6401_Intro_to_DeepLearning_Assignment_2"
+  wandb_entity: "Kaushik"
+  wandb_run_tag: "Solution_2"
+  sweep_count: 75

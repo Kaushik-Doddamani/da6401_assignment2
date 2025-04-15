@@ -1,5 +1,8 @@
 import os
 import zipfile
+import torch
+import random
+import numpy as np
 
 def extract_data_if_needed(zip_path, extract_dir):
     """
@@ -15,3 +18,11 @@ def extract_data_if_needed(zip_path, extract_dir):
         print("Extraction done.")
     else:
         print(f"Directory {extract_dir} already exists. Skipping extraction.")
+
+
+def set_seeds(seed=42):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
