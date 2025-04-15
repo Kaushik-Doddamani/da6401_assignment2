@@ -6,6 +6,9 @@ import wandb
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
+import pandas as pd
+import numpy as np
+from wandb import Api
 
 # Ensure the project root is in sys.path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -22,6 +25,98 @@ def get_configs(config_filename):
     with open(os.path.join(project_root, "config", config_filename), 'r') as f:
         config = yaml.safe_load(f)
     return config
+
+# ------------------------------------------------------------------------------------
+# Generate a correlation table after the sweep finishes, logging it to a new W&B run
+# ------------------------------------------------------------------------------------
+def  generate_correlation_table(static_config, sweep_id):
+    """
+    Connects to the W&B API, retrieves all runs for the given sweep_id that also
+    contain the specified tag, gathers numeric hyperparameters and final metrics,
+    computes correlations, and logs the correlation matrix as a wandb.Table in a new run.
+    
+    :param project: (str) W&B project name (e.g., "inat_sweep_demo")
+    :param sweep_id: (str) The unique ID of the sweep.
+    :param run_tag:  (str) A tag used to mark sweep runs (if provided, only runs having
+                          that tag will be considered).
+    """
+    api = Api()
+    project = static_config["wandb_project"]
+    run_tag = static_config["wandb_run_tag"]
+    corr_run_name = static_config["correlation_run_name"]
+    
+    # Build filter: always filter by sweep_id.
+    filters = {"sweep": sweep_id}
+    if run_tag is not None:
+        filters["tags"] = {"$in": [run_tag]}
+    
+    # Query runs by project
+    runs = api.runs(f"{project}", filters=filters)
+    if not runs:
+        print(f"No runs found for sweep_id: {sweep_id} with tag: {run_tag}")
+        return
+
+    records = []
+    for run in runs:
+        # Get final metrics from run.summary (e.g., val_accuracy, val_loss)
+        val_acc = run.summary.get("val_accuracy", None)
+        val_loss = run.summary.get("val_loss", None)
+        
+        # Build dict with hyperparameters and metrics
+        row = {
+            "val_accuracy": val_acc,
+            "val_loss": val_loss,
+            "num_filters":          run.config.get("num_filters"),
+            "kernel_size":          run.config.get("kernel_size"),
+            "activation_fn":        run.config.get("activation_fn"),
+            "dense_neurons":        run.config.get("dense_neurons"),
+            "filter_organization":  run.config.get("filter_organization"),
+            "data_augmentation":    run.config.get("data_augmentation"),
+            "batch_norm":           run.config.get("batch_norm"),
+            "dropout_rate":         run.config.get("dropout_rate"),
+            "learning_rate":        run.config.get("learning_rate"),
+            "batch_size":           run.config.get("batch_size"),
+            "epochs":               run.config.get("epochs"),
+            "resize_dim":           run.config.get("resize_dim"),
+        }
+        records.append(row)
+    
+    df = pd.DataFrame(records)
+    if df.empty:
+        print("No data collected from runs. Exiting.")
+        return
+
+    # Correlation can only be computed on numeric columns
+    numeric_df = df.select_dtypes(include=[np.number])
+    if numeric_df.empty:
+        print("No numeric columns to compute correlation on.")
+        return
+
+    # Compute the correlation matrix
+    corr_matrix = numeric_df.corr()
+
+    # Create a new W&B run to log the correlation table
+    wandb.init(project=project, name=corr_run_name)
+    
+    corr_cols = corr_matrix.columns.tolist()  # e.g. ["val_accuracy", "val_loss", "num_filters", ...]
+    # The first column in our table is the row label (metric/param name), 
+    # then the rest are the correlation values corresponding to each col.
+    table_columns = [""] + corr_cols  # The first column is blank (for row label)
+    correlation_table = wandb.Table(columns=table_columns)
+
+    # For each row in corr_matrix, add a row to our wandb.Table
+    for row_name in corr_cols:
+        row_data = corr_matrix.loc[row_name, :].values.tolist()  # correlation values for row_name
+        # row: row label + the correlation values
+        correlation_table.add_data(row_name, *row_data)
+
+    # Log the table so we see the row labels properly
+    wandb.log({"hyperparam_correlation_matrix": correlation_table})
+
+    print("=== Correlation Matrix ===")
+    print(corr_matrix)
+    wandb.finish()
+
 
 # ==============================
 # Main training function
@@ -50,8 +145,7 @@ def sweep_train():
     device = "cuda" if torch.cuda.is_available() else "cpu"
     set_seeds(42)
 
-    # Build the model using W&B config
-    # e.g. config.activation_fn might be "relu"
+    # Determine activation function
     act_fn = None
     if sweep_config.activation_fn == "relu":
         act_fn = nn.ReLU
@@ -124,19 +218,28 @@ def sweep_train():
 
 def main():
     """
-    This function:
-      1) Defines the sweep_config as a Python dict.
-      2) Creates the sweep via `wandb.sweep(...)`.
-      3) Starts the W&B agent with `wandb.agent(...)`, calling `sweep_train()`.
+    1) Reads static config + sweep config from YAML.
+    2) Creates the sweep.
+    3) Runs the W&B agent for the desired number of runs.
+    4) After the sweep completes, we query all runs, build a correlation table,
+       and log it in a new run called 'correlation_analysis'.
     """
     # Load static config from YAML file
     static_config = get_configs('configs.yaml')['solution_2_configs']
     # Load sweep config from YAML file
     sweep_config = get_configs('sweep_config.yaml')
 
-    # W&B sweep
+    # Create the sweep
     sweep_id = wandb.sweep(sweep_config, project=static_config["wandb_project"])
+    # Run sweep experiments
     wandb.agent(sweep_id, function=sweep_train, count=static_config["sweep_count"])
+
+    # Once the agent finishes count=... runs, we generate the correlation table
+    # Programmatically create & log correlation table
+    generate_correlation_table(
+        static_config=static_config,
+        sweep_id=sweep_id
+    )
 
 
 if __name__ == "__main__":
