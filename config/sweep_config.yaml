@@ -1,11 +1,11 @@
 # sweep_config.yaml
-method: bayes  # or bayes / grid
+method: bayes  # or bayes / grid / random
 metric:
   name: val_accuracy
   goal: maximize
 parameters:
   num_filters:
-    values: [16, 32, 64, 128]   # or [32, 64, 128]
+    values: [16, 32, 64]
   kernel_size:
     values: [3, 5]
   activation_fn:
@@ -23,8 +23,8 @@ parameters:
   learning_rate:
     values: [1e-3, 5e-4, 1e-4]
   batch_size:
-    values: [8, 32, 64]
+    values: [8, 32]
   epochs:
     values: [5, 10, 15, 20]
   resize_dim:
-    values: [224, 352, 448]
+    values: [224, 352]

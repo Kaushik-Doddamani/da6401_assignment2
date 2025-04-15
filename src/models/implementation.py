@@ -189,6 +189,7 @@ class MyCNNExtended(nn.Module):
         """
         super(MyCNNExtended, self).__init__()
 
+        self.activation_class = activation_fn
         Act = activation_fn  # convenience
         padding = kernel_size // 2
 
@@ -202,13 +203,13 @@ class MyCNNExtended(nn.Module):
         elif filter_organization == "double_each_layer":
             filter_sizes = [num_filters*(2**i) for i in range(5)]
         elif filter_organization == "halve_each_layer":
-            # integer cast for safety
+            # ensure at least 1 filter
             filter_sizes = [max(1, num_filters//(2**i)) for i in range(5)]
         else:
             # fallback: same
             filter_sizes = [num_filters]*5
 
-        # We'll store each conv block in a list
+        # Build convolutional layers
         conv_layers = []
         in_ch = in_channels
         for out_ch in filter_sizes:
@@ -223,7 +224,7 @@ class MyCNNExtended(nn.Module):
 
         self.conv_layers = nn.Sequential(*conv_layers)
 
-        # After 5 max pools => image height/width are /32
+        # After 5 max pools => (height, width) / 32
         reduced_height = image_height // 32
         reduced_width  = image_width // 32
         final_ch = filter_sizes[-1]
@@ -240,7 +241,7 @@ class MyCNNExtended(nn.Module):
         self.fc = nn.Sequential(*layers_dense)
 
     def forward(self, x):
-        # Pass through conv blocks
+        # Pass through 5 conv blocks
         x = self.conv_layers(x)
         # Flatten
         x = x.view(x.size(0), -1)
