@@ -23,8 +23,8 @@ parameters:
   learning_rate:
     values: [1e-3, 5e-4, 1e-4]
   batch_size:
-    values: [8, 32]
+    values: [8, 32, 64]
   epochs:
     values: [5, 10, 15, 20]
   resize_dim:
-    values: [224, 352]
+    values: [224, 352, 448]

@@ -35,10 +35,8 @@ def  generate_correlation_table(static_config, sweep_id):
     contain the specified tag, gathers numeric hyperparameters and final metrics,
     computes correlations, and logs the correlation matrix as a wandb.Table in a new run.
     
-    :param project: (str) W&B project name (e.g., "inat_sweep_demo")
+    :param static_config: Dictionary containing keys like 'wandb_project', 'wandb_run_tag', and 'correlation_run_name'.
     :param sweep_id: (str) The unique ID of the sweep.
-    :param run_tag:  (str) A tag used to mark sweep runs (if provided, only runs having
-                          that tag will be considered).
     """
     api = Api()
     project = static_config["wandb_project"]
@@ -124,8 +122,8 @@ def  generate_correlation_table(static_config, sweep_id):
 def sweep_train():
     """
     This function is called by wandb.agent(...) for each sweep run.
-    It reads the config from wandb.config, sets up data & model,
-    trains and logs results to W&B.
+    It reads the config from wandb.config, sets up the data and model,
+    trains and logs the metrics to W&B.
     """
     # Initialize a W&B run so that wandb.config is available.
     wandb.init()
@@ -170,7 +168,12 @@ def sweep_train():
             filter_organization=sweep_config.filter_organization,
             batch_norm=sweep_config.batch_norm,
             dropout_rate=sweep_config.dropout_rate
-        ).to(device)
+        )
+        # If multiple GPUs are available, wrap the model using DataParallel.
+        if torch.cuda.device_count() > 1:
+            print(f"Using {torch.cuda.device_count()} GPUs with DataParallel")
+            model = nn.DataParallel(model)
+        model = model.to(device)
 
         # Load data: train + val
         train_dir = os.path.join(static_config['data_root'], "train")
@@ -189,7 +192,7 @@ def sweep_train():
         optimizer = optim.Adam(model.parameters(), lr=sweep_config.learning_rate)
         criterion = nn.CrossEntropyLoss()
 
-        # Train loop
+        # Training loop
         for epoch in range(sweep_config.epochs):
             train_loss, train_acc = train_one_epoch(model, train_loader, optimizer, criterion, device)
             val_loss, val_acc = validate_one_epoch(model, val_loader, criterion, device)
@@ -234,7 +237,7 @@ def main():
     # Run sweep experiments
     wandb.agent(sweep_id, function=sweep_train, count=static_config["sweep_count"])
 
-    # Once the agent finishes count=... runs, we generate the correlation table
+    # Once the agent finishes the specified runs, we generate the correlation table
     # Programmatically create & log correlation table
     generate_correlation_table(
         static_config=static_config,
