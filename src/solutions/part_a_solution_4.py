@@ -129,7 +129,6 @@ def train_and_evaluate_best(static_config):
     model = model.to(device)
 
     # Use the training data (with 20% reserved as validation) similar to Q2.
-    static_config = get_configs(project_root, 'configs.yaml')['solution_4_configs']
     train_dir = os.path.join(static_config["data_root"], "train")
     train_dataset, val_dataset, class_names = load_inaturalist_train_val_data(
         data_dir=train_dir,
