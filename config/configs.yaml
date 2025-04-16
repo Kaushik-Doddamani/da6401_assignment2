@@ -8,6 +8,5 @@ solution_2_configs:
   wandb_project: "DA6401_Intro_to_DeepLearning_Assignment_2"
   wandb_entity: "Kaushik"
   wandb_run_tag: "Solution_2"
-  sweep_count: 3
+  sweep_count: 75
   correlation_run_name: "correlation_table_builder"
-  

@@ -218,7 +218,9 @@ def sweep_train():
     finally:
         wandb.finish()  # ensure that wandb finishes regardless of errors
 
-
+# ==============================
+# Main function: sweep creation + correlation analysis
+# ==============================
 def main():
     """
     1) Reads static config + sweep config from YAML.
