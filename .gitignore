@@ -2,3 +2,4 @@ __pycache__
 inaturalist_data
 wandb
 notebooks/wandb/
+.idea

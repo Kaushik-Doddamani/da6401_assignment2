@@ -3,6 +3,9 @@ import zipfile
 import torch
 import random
 import numpy as np
+import torch.nn as nn
+import yaml
+
 
 def extract_data_if_needed(zip_path, extract_dir):
     """
@@ -26,3 +29,27 @@ def set_seeds(seed=42):
     torch.manual_seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
+
+
+def get_activation_fn(activation_name):
+    """
+    Returns the activation function class based on the provided name.
+    """
+    act_fn = None
+    if activation_name.lower() == "mish":
+        act_fn = nn.Mish
+    elif activation_name.lower() == "relu":
+        act_fn = nn.ReLU
+    elif activation_name.lower() == "gelu":
+        act_fn = nn.GELU
+    elif activation_name.lower() == "silu":
+        act_fn = nn.SiLU
+    else:
+        act_fn = nn.ReLU
+    return act_fn
+
+
+def get_configs(project_root, config_filename):
+    with open(os.path.join(project_root, "config", config_filename), 'r') as f:
+        config = yaml.safe_load(f)
+    return config

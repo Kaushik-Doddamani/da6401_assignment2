@@ -24,6 +24,7 @@ def train_one_epoch(model, dataloader, optimizer, criterion, device):
     epoch_acc = correct / total
     return epoch_loss, epoch_acc
 
+
 # Validation loop
 def validate_one_epoch(model, dataloader, criterion, device):
     model.eval()
@@ -44,3 +45,25 @@ def validate_one_epoch(model, dataloader, criterion, device):
     epoch_loss = running_loss / total
     epoch_acc = correct / total
     return epoch_loss, epoch_acc
+
+
+def evaluate_model_on_test_data(model, test_loader, device):
+    """
+    Evaluates the model on the test dataset and returns the accuracy.
+
+    :param model: Trained model.
+    :param test_loader: DataLoader for the test dataset.
+    :param device: cuda or cpu.
+    :return: Test accuracy as float.
+    """
+    model.eval()
+    correct = 0
+    total = 0
+    with torch.no_grad():
+        for images, labels in test_loader:
+            images, labels = images.to(device), labels.to(device)
+            outputs = model(images)
+            _, preds = torch.max(outputs, 1)
+            correct += (preds == labels).sum().item()
+            total += labels.size(0)
+    return correct / total

@@ -16,20 +16,16 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from src.utils.common_utils import set_seeds
+from src.utils.common_utils import set_seeds, get_activation_fn, get_configs
 from src.utils.model_utils import train_one_epoch, validate_one_epoch
-from src.data.data_loader import load_inaturalist_train_val
+from src.data.data_loader import load_inaturalist_train_val_data
 from src.models.implementation import MyCNNExtended
 
-def get_configs(config_filename):
-    with open(os.path.join(project_root, "config", config_filename), 'r') as f:
-        config = yaml.safe_load(f)
-    return config
 
 # ------------------------------------------------------------------------------------
 # Generate a correlation table after the sweep finishes, logging it to a new W&B run
 # ------------------------------------------------------------------------------------
-def  generate_correlation_table(static_config, sweep_id):
+def generate_correlation_table(static_config, sweep_id):
     """
     Connects to the W&B API, retrieves all runs for the given sweep_id that also
     contain the specified tag, gathers numeric hyperparameters and final metrics,
@@ -42,12 +38,12 @@ def  generate_correlation_table(static_config, sweep_id):
     project = static_config["wandb_project"]
     run_tag = static_config["wandb_run_tag"]
     corr_run_name = static_config["correlation_run_name"]
-    
+
     # Build filter: always filter by sweep_id.
     filters = {"sweep": sweep_id}
     if run_tag is not None:
         filters["tags"] = {"$in": [run_tag]}
-    
+
     # Query runs by project
     runs = api.runs(f"{project}", filters=filters)
     if not runs:
@@ -59,26 +55,26 @@ def  generate_correlation_table(static_config, sweep_id):
         # Get final metrics from run.summary (e.g., val_accuracy, val_loss)
         val_acc = run.summary.get("val_accuracy", None)
         val_loss = run.summary.get("val_loss", None)
-        
+
         # Build dict with hyperparameters and metrics
         row = {
             "val_accuracy": val_acc,
             "val_loss": val_loss,
-            "num_filters":          run.config.get("num_filters"),
-            "kernel_size":          run.config.get("kernel_size"),
-            "activation_fn":        run.config.get("activation_fn"),
-            "dense_neurons":        run.config.get("dense_neurons"),
-            "filter_organization":  run.config.get("filter_organization"),
-            "data_augmentation":    run.config.get("data_augmentation"),
-            "batch_norm":           run.config.get("batch_norm"),
-            "dropout_rate":         run.config.get("dropout_rate"),
-            "learning_rate":        run.config.get("learning_rate"),
-            "batch_size":           run.config.get("batch_size"),
-            "epochs":               run.config.get("epochs"),
-            "resize_dim":           run.config.get("resize_dim"),
+            "num_filters": run.config.get("num_filters"),
+            "kernel_size": run.config.get("kernel_size"),
+            "activation_fn": run.config.get("activation_fn"),
+            "dense_neurons": run.config.get("dense_neurons"),
+            "filter_organization": run.config.get("filter_organization"),
+            "data_augmentation": run.config.get("data_augmentation"),
+            "batch_norm": run.config.get("batch_norm"),
+            "dropout_rate": run.config.get("dropout_rate"),
+            "learning_rate": run.config.get("learning_rate"),
+            "batch_size": run.config.get("batch_size"),
+            "epochs": run.config.get("epochs"),
+            "resize_dim": run.config.get("resize_dim"),
         }
         records.append(row)
-    
+
     df = pd.DataFrame(records)
     if df.empty:
         print("No data collected from runs. Exiting.")
@@ -95,7 +91,7 @@ def  generate_correlation_table(static_config, sweep_id):
 
     # Create a new W&B run to log the correlation table
     wandb.init(project=project, name=corr_run_name)
-    
+
     corr_cols = corr_matrix.columns.tolist()  # e.g. ["val_accuracy", "val_loss", "num_filters", ...]
     # The first column in our table is the row label (metric/param name), 
     # then the rest are the correlation values corresponding to each col.
@@ -128,7 +124,7 @@ def sweep_train():
     # Initialize a W&B run so that wandb.config is available.
     wandb.init()
     sweep_config = wandb.config
-    static_config = get_configs('configs.yaml')['solution_2_configs']
+    static_config = get_configs(project_root, 'configs.yaml')['solution_2_configs']
 
     # Construct a run name based on various hyperparameters.
     run_name = (
@@ -144,17 +140,7 @@ def sweep_train():
     set_seeds(42)
 
     # Determine activation function
-    act_fn = None
-    if sweep_config.activation_fn == "relu":
-        act_fn = nn.ReLU
-    elif sweep_config.activation_fn == "gelu":
-        act_fn = nn.GELU
-    elif sweep_config.activation_fn == "silu":
-        act_fn = nn.SiLU
-    elif sweep_config.activation_fn == "mish":
-        act_fn = nn.Mish
-    else:
-        act_fn = nn.ReLU # fallback
+    act_fn = get_activation_fn(sweep_config.activation_fn)
 
     try:
         model = MyCNNExtended(
@@ -177,7 +163,7 @@ def sweep_train():
 
         # Load data: train + val
         train_dir = os.path.join(static_config['data_root'], "train")
-        train_dataset, val_dataset, class_names = load_inaturalist_train_val(
+        train_dataset, val_dataset, class_names = load_inaturalist_train_val_data(
             data_dir=train_dir,
             val_ratio=0.2,
             seed=42,
@@ -186,7 +172,7 @@ def sweep_train():
         )
 
         train_loader = DataLoader(train_dataset, batch_size=sweep_config.batch_size, shuffle=True, num_workers=4)
-        val_loader   = DataLoader(val_dataset,   batch_size=sweep_config.batch_size, shuffle=False, num_workers=4)
+        val_loader = DataLoader(val_dataset, batch_size=sweep_config.batch_size, shuffle=False, num_workers=4)
 
         # Optimizer & Loss
         optimizer = optim.Adam(model.parameters(), lr=sweep_config.learning_rate)
@@ -206,9 +192,9 @@ def sweep_train():
                 "val_accuracy": val_acc
             })
 
-            print(f"[Epoch {epoch+1}/{sweep_config.epochs}] "
-                f"train_loss={train_loss:.4f}, train_acc={train_acc:.4f}, "
-                f"val_loss={val_loss:.4f}, val_acc={val_acc:.4f}")
+            print(f"[Epoch {epoch + 1}/{sweep_config.epochs}] "
+                  f"train_loss={train_loss:.4f}, train_acc={train_acc:.4f}, "
+                  f"val_loss={val_loss:.4f}, val_acc={val_acc:.4f}")
 
     except torch.cuda.OutOfMemoryError as e:
         print("CUDA out of memory error encountered. Skipping current run.")
@@ -217,6 +203,7 @@ def sweep_train():
         torch.cuda.empty_cache()
     finally:
         wandb.finish()  # ensure that wandb finishes regardless of errors
+
 
 # ==============================
 # Main function: sweep creation + correlation analysis
@@ -230,9 +217,9 @@ def main():
        and log it in a new run called 'correlation_analysis'.
     """
     # Load static config from YAML file
-    static_config = get_configs('configs.yaml')['solution_2_configs']
+    static_config = get_configs(project_root, 'configs.yaml')['solution_2_configs']
     # Load sweep config from YAML file
-    sweep_config = get_configs('sweep_config.yaml')
+    sweep_config = get_configs(project_root, 'sweep_config.yaml')
 
     # Create the sweep
     sweep_id = wandb.sweep(sweep_config, project=static_config["wandb_project"])

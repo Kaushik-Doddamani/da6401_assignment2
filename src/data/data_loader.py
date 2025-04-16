@@ -16,11 +16,12 @@ if project_root not in sys.path:
 
 from src.utils.common_utils import set_seeds
 
-def load_inaturalist_train_val(data_dir,
-                               val_ratio=0.2,
-                               seed=42,
-                               augment=False,
-                               resize_dim=224):
+
+def load_inaturalist_train_val_data(data_dir,
+                                    val_ratio=0.2,
+                                    seed=42,
+                                    augment=False,
+                                    resize_dim=224):
     """
     Loads iNaturalist data from 'data_dir', does stratified train/val split.
     Optionally apply data augmentations or just a simple Resize+ToTensor.
@@ -41,13 +42,13 @@ def load_inaturalist_train_val(data_dir,
         transform_list = [
             #  (A) Random resizing and cropping
             T.RandomResizedCrop(size=resize_dim),
-            
+
             #  (B) Random flips
             T.RandomHorizontalFlip(p=0.5),
-            
+
             #  (C) Some random rotation
             T.RandomRotation(degrees=30),
-            
+
             #  (D) Color jitter (brightness/contrast/saturation/hue)
             T.ColorJitter(
                 brightness=0.2,
@@ -55,16 +56,16 @@ def load_inaturalist_train_val(data_dir,
                 saturation=0.2,
                 hue=0.1
             ),
-            
+
             #  (E) Small chance to invert the colors
             T.RandomInvert(p=0.1),
-            
+
             #  (F) Random perspective distortion
             T.RandomPerspective(distortion_scale=0.2, p=0.5),
-            
+
             #  (G) Finally, convert to Tensor
             T.ToTensor(),
-            
+
             #  (H) Optionally, random erase part of the image
             T.RandomErasing(p=0.1)
         ]
@@ -91,12 +92,31 @@ def load_inaturalist_train_val(data_dir,
                                                   stratify=labels,
                                                   random_state=seed)
     train_dataset = torch.utils.data.Subset(full_dataset, train_indices)
-    val_dataset   = torch.utils.data.Subset(full_dataset, val_indices)
+    val_dataset = torch.utils.data.Subset(full_dataset, val_indices)
     return train_dataset, val_dataset, class_names
+
+
+def load_inaturalist_test_data(test_dir, resize_dim):
+    """
+    Loads the test dataset from 'test_dir' using ImageFolder.
+    Applies a minimal transformation: resizing then conversion to tensor.
+
+    :param test_dir: Directory containing test data (with subfolders per class).
+    :param resize_dim: Desired image size (square, e.g., 352) (should be a multiple of 32).
+    :return: (test_dataset, class_names)
+    """
+    transform = T.Compose([
+        T.Resize((resize_dim, resize_dim)),
+        T.ToTensor()
+    ])
+    test_dataset = torchvision.datasets.ImageFolder(root=test_dir, transform=transform)
+    class_names = test_dataset.classes
+    return test_dataset, class_names
 
 
 class InatDataModule(pl.LightningDataModule):
     """Data module for iNaturalist images. Creates stratified train/val split."""
+
     def __init__(self,
                  data_dir: str = "../inaturalist_data/nature_12K_extracted/inaturalist_12K/train",
                  val_ratio: float = 0.2,
@@ -123,13 +143,13 @@ class InatDataModule(pl.LightningDataModule):
             transform_list = [
                 #  (A) Random resizing and cropping
                 T.RandomResizedCrop(size=self.resize_dim),
-                
+
                 #  (B) Random flips
                 T.RandomHorizontalFlip(p=0.5),
-                
+
                 #  (C) Some random rotation
                 T.RandomRotation(degrees=30),
-                
+
                 #  (D) Color jitter (brightness/contrast/saturation/hue)
                 T.ColorJitter(
                     brightness=0.2,
@@ -137,16 +157,16 @@ class InatDataModule(pl.LightningDataModule):
                     saturation=0.2,
                     hue=0.1
                 ),
-                
+
                 #  (E) Small chance to invert the colors
                 T.RandomInvert(p=0.1),
-                
+
                 #  (F) Random perspective distortion
                 T.RandomPerspective(distortion_scale=0.2, p=0.5),
-                
+
                 #  (G) Finally, convert to Tensor
                 T.ToTensor(),
-                
+
                 #  (H) Optionally, random erase part of the image
                 T.RandomErasing(p=0.1)
             ]
@@ -175,7 +195,7 @@ class InatDataModule(pl.LightningDataModule):
         )
         # Create subsets
         self.train_dataset = torch.utils.data.Subset(full_dataset, train_indices)
-        self.val_dataset   = torch.utils.data.Subset(full_dataset, val_indices)
+        self.val_dataset = torch.utils.data.Subset(full_dataset, val_indices)
 
     def train_dataloader(self):
         return DataLoader(self.train_dataset,
