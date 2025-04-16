@@ -4,16 +4,17 @@ from torch import nn, optim
 import pytorch_lightning as pl
 
 # Ensure the project root is in sys.path
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 # Add the project root to sys.path if it isn’t already there.
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from src.models.implementation import MyCNNExtended
+from models.implementation import MyCNNExtended
 
 
 class LitInatModel(pl.LightningModule):
     """ Wraps MyCNN in a LightningModule for multi-GPU & logging. """
+
     def __init__(
             self,
             in_channels=3,

@@ -2,6 +2,7 @@ from PIL import Image
 import torchvision.transforms as T
 import torch
 
+
 def load_single_image(image_path, resize=True, resize_dim=(224, 224)):
     """
     Loads a single image with PIL, applies transforms, and returns the tensor.
@@ -20,7 +21,7 @@ def load_single_image(image_path, resize=True, resize_dim=(224, 224)):
         # Basic transform: resize to resize_dim[0] x resize_dim[1], then convert to tensor
         transform = T.Compose([
             T.Resize(resize_dim),  # (H, W)
-            T.ToTensor()           # from [0..255] PIL image to [0..1] float tensor, shape (C,H,W)
+            T.ToTensor()  # from [0..255] PIL image to [0..1] float tensor, shape (C,H,W)
         ])
 
     # Load the image
@@ -36,6 +37,7 @@ def load_single_image(image_path, resize=True, resize_dim=(224, 224)):
     print(f"Final input shape to the model: {img_tensor.shape} (Batch, C, H, W)\n")
 
     return img_tensor
+
 
 def test_model_with_image(model, image_tensor):
     """

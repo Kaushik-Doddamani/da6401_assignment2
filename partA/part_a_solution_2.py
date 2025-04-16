@@ -1,7 +1,6 @@
 import os
 import sys
 import torch
-import yaml
 import wandb
 import torch.nn as nn
 import torch.optim as optim
@@ -11,15 +10,15 @@ import numpy as np
 from wandb import Api
 
 # Ensure the project root is in sys.path
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 # Add the project root to sys.path if it isn’t already there.
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from src.utils.common_utils import set_seeds, get_activation_fn, get_configs
-from src.utils.model_utils import train_one_epoch, validate_one_epoch
-from src.data.data_loader import load_inaturalist_train_val_data
-from src.models.implementation import MyCNNExtended
+from utils.common_utils import set_seeds, get_activation_fn, get_configs
+from utils.model_utils import train_one_epoch, validate_one_epoch
+from data.data_loader import load_inaturalist_train_val_data
+from models.implementation import MyCNNExtended
 
 
 # ------------------------------------------------------------------------------------

@@ -5,14 +5,15 @@ import torch.nn as nn
 import yaml
 
 # Ensure the project root is in sys.path
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 # Add the project root to sys.path if it isn’t already there.
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from src.models.implementation import MyCNN
-from src.utils.data_utils import load_single_image
-from src.utils.common_utils import extract_data_if_needed
+from models.implementation import MyCNN
+from utils.data_utils import load_single_image
+from utils.common_utils import extract_data_if_needed
+
 
 def test_model_with_image(model, image_tensor):
     """
@@ -25,15 +26,16 @@ def test_model_with_image(model, image_tensor):
     print(f"Model output shape: {output.shape} (Batch, 10)")
     print("Raw output logits:", output)
 
+
 def main():
     config = None
     with open(os.path.join(project_root, "config", "configs.yaml"), 'r') as f:
         config = yaml.safe_load(f)
-    
+
     # Paths (adjust if necessary)
     DATA_ZIP_PATH = config['solution_1_configs']['data_zip_path']
-    EXTRACT_DIR   = config['solution_1_configs']['extracted_data_dir']
-    
+    EXTRACT_DIR = config['solution_1_configs']['extracted_data_dir']
+
     # 1) Optional: Extract ZIP if needed
     extract_data_if_needed(DATA_ZIP_PATH, EXTRACT_DIR)
 
@@ -50,10 +52,10 @@ def main():
     # ------------------------------------------------------------------
 
     # 2) Pick a single image path from the extracted data
-    #    For example, one file from 'train/Plantae' 
+    #    For example, one file from 'train/Plantae'
     sample_image_path = os.path.join(
         EXTRACT_DIR,
-        "inaturalist_12K",    # top-level folder from the zip
+        "inaturalist_12K",  # top-level folder from the zip
         "train",
         "Insecta",
         "0a4a6a25d2b409ed0755097ed21fdf5b.jpg"
@@ -62,12 +64,11 @@ def main():
         raise FileNotFoundError(f"Sample image not found at {sample_image_path}")
 
     # 3) Load and transform the image
-    image_tensor = load_single_image(sample_image_path, resize=True, resize_dim=(32*15, 32*15))
+    image_tensor = load_single_image(sample_image_path, resize=True, resize_dim=(32 * 15, 32 * 15))
 
     # Inspect the shape to pick your image_height, image_width
     # For example, if the printed shape is [3, 480, 640], do:
     _, c, h, w = image_tensor.shape
-
 
     # 4) Create model instance
     #    Example: 16 filters each conv, kernel_size=3, dense of 128
@@ -82,6 +83,7 @@ def main():
 
     # 5) Test forward pass
     test_model_with_image(model, image_tensor)
+
 
 if __name__ == "__main__":
     main()

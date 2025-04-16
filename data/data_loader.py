@@ -9,12 +9,12 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 
 # Ensure the project root is in sys.path
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 # Add the project root to sys.path if it isn’t already there.
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from src.utils.common_utils import set_seeds
+from utils.common_utils import set_seeds
 
 
 def load_inaturalist_train_val_data(data_dir,

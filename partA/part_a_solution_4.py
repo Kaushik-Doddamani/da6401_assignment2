@@ -9,14 +9,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Ensure the project root is in sys.path
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from src.utils.common_utils import set_seeds, get_activation_fn, get_configs
-from src.utils.model_utils import train_one_epoch, validate_one_epoch, evaluate_model_on_test_data
-from src.data.data_loader import load_inaturalist_train_val_data, load_inaturalist_test_data
-from src.models.implementation import MyCNNExtended
+from utils.common_utils import set_seeds, get_activation_fn, get_configs
+from utils.model_utils import train_one_epoch, validate_one_epoch, evaluate_model_on_test_data
+from data.data_loader import load_inaturalist_train_val_data, load_inaturalist_test_data
+from models.implementation import MyCNNExtended
 
 # Best hyperparameters provided.
 best_hparams = {

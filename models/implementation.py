@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 
+
+# This module contains the implementation of a simple CNN architecture
 class MyCNN(nn.Module):
     """
     A modular CNN architecture:
@@ -13,15 +15,14 @@ class MyCNN(nn.Module):
     final feature map size is (m x (H/32) x (W/32)) if H and W are multiples of 32.
     """
 
-
     def __init__(self,
                  in_channels=3,
-                 num_filters=16,     # m
-                 kernel_size=3,      # k
+                 num_filters=16,  # m
+                 kernel_size=3,  # k
                  activation_fn=nn.ReLU,
                  dense_neurons=128,  # n
-                 image_height=224,   # default
-                 image_width=224     # default
+                 image_height=224,  # default
+                 image_width=224  # default
                  ):
         """
         :param in_channels:   Number of input channels (3 for RGB images)
@@ -114,7 +115,7 @@ class MyCNN(nn.Module):
         # Each pool halves H and W => H/32, W/32
         #--------------------------------------
         reduced_height = image_height // 32
-        reduced_width  = image_width // 32
+        reduced_width = image_width // 32
         self.flatten_dim = num_filters * reduced_height * reduced_width
 
         # Dense layer
@@ -128,41 +129,42 @@ class MyCNN(nn.Module):
         # x: (batch_size, 3, H, W)
 
         # Block 1
-        x = self.conv1(x)    # (batch_size, m, H, W)
-        x = self.act1(x)     # (batch_size, m, H, W)
-        x = self.pool1(x)    # (batch_size, m, H/2, W/2)
+        x = self.conv1(x)  # (batch_size, m, H, W)
+        x = self.act1(x)  # (batch_size, m, H, W)
+        x = self.pool1(x)  # (batch_size, m, H/2, W/2)
 
         # Block 2
-        x = self.conv2(x)    # (batch_size, m, H/2, W/2)
-        x = self.act2(x)     # (batch_size, m, H/2, W/2)
-        x = self.pool2(x)    # (batch_size, m, H/4, W/4)
+        x = self.conv2(x)  # (batch_size, m, H/2, W/2)
+        x = self.act2(x)  # (batch_size, m, H/2, W/2)
+        x = self.pool2(x)  # (batch_size, m, H/4, W/4)
 
         # Block 3
-        x = self.conv3(x)    # (batch_size, m, H/4, W/4)
-        x = self.act3(x)     # (batch_size, m, H/4, W/4)
-        x = self.pool3(x)    # (batch_size, m, H/8, W/8)
+        x = self.conv3(x)  # (batch_size, m, H/4, W/4)
+        x = self.act3(x)  # (batch_size, m, H/4, W/4)
+        x = self.pool3(x)  # (batch_size, m, H/8, W/8)
 
         # Block 4
-        x = self.conv4(x)    # (batch_size, m, H/8, W/8)
-        x = self.act4(x)     # (batch_size, m, H/8, W/8)
-        x = self.pool4(x)    # (batch_size, m, H/16, W/16)
+        x = self.conv4(x)  # (batch_size, m, H/8, W/8)
+        x = self.act4(x)  # (batch_size, m, H/8, W/8)
+        x = self.pool4(x)  # (batch_size, m, H/16, W/16)
 
         # Block 5
-        x = self.conv5(x)    # (batch_size, m, H/16, W/16)
-        x = self.act5(x)     # (batch_size, m, H/16, W/16)
-        x = self.pool5(x)    # (batch_size, m, H/32, W/32)
+        x = self.conv5(x)  # (batch_size, m, H/16, W/16)
+        x = self.act5(x)  # (batch_size, m, H/16, W/16)
+        x = self.pool5(x)  # (batch_size, m, H/32, W/32)
 
         # Flatten
         x = x.view(x.size(0), -1)  # (batch_size, m * (H/32) * (W/32))
 
         # Dense
-        x = self.fc1(x)            # (batch_size, dense_neurons)
-        x = self.act_fc1(x)        # (batch_size, dense_neurons)
+        x = self.fc1(x)  # (batch_size, dense_neurons)
+        x = self.act_fc1(x)  # (batch_size, dense_neurons)
 
         # Output: 10 classes
-        x = self.output(x)         # (batch_size, 10)
+        x = self.output(x)  # (batch_size, 10)
 
         return x
+
 
 # Extended version of MyCNN with additional features
 class MyCNNExtended(nn.Module):
@@ -170,9 +172,10 @@ class MyCNNExtended(nn.Module):
     Basic CNN with 5 conv->act->pool blocks, optional BN, dropout,
     flexible filter organization, etc.
     """
+
     def __init__(self,
                  in_channels=3,
-                 num_filters=16,       # base number of filters
+                 num_filters=16,  # base number of filters
                  kernel_size=3,
                  activation_fn=nn.ReLU,
                  dense_neurons=128,
@@ -199,15 +202,15 @@ class MyCNNExtended(nn.Module):
         #                 "halve_each_layer" => [m, m/2, m/4, m/8, m/16] etc
         filter_sizes = []
         if filter_organization == "same":
-            filter_sizes = [num_filters]*5
+            filter_sizes = [num_filters] * 5
         elif filter_organization == "double_each_layer":
-            filter_sizes = [num_filters*(2**i) for i in range(5)]
+            filter_sizes = [num_filters * (2 ** i) for i in range(5)]
         elif filter_organization == "halve_each_layer":
             # ensure at least 1 filter
-            filter_sizes = [max(1, num_filters//(2**i)) for i in range(5)]
+            filter_sizes = [max(1, num_filters // (2 ** i)) for i in range(5)]
         else:
             # fallback: same
-            filter_sizes = [num_filters]*5
+            filter_sizes = [num_filters] * 5
 
         # Build convolutional layers
         conv_layers = []
@@ -226,7 +229,7 @@ class MyCNNExtended(nn.Module):
 
         # After 5 max pools => (height, width) / 32
         reduced_height = image_height // 32
-        reduced_width  = image_width // 32
+        reduced_width = image_width // 32
         final_ch = filter_sizes[-1]
         self.flatten_dim = final_ch * reduced_height * reduced_width
 
