@@ -82,7 +82,7 @@ def plot_predictions(model, test_dataset, class_names, device, output_dir, grid_
 
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     # Save the figure so that we can log it with wandb
-    output_filepath = f"{output_dir}/test_predictions_grid.png"
+    output_filepath = f"{output_dir}/part_a_q4_test_predictions_grid.png"
     plt.savefig(output_filepath, dpi=300)
     # Optionally, you can call plt.show() if you want to display the plot interactively.
     plt.show()
@@ -178,7 +178,7 @@ def train_and_evaluate_best(static_config):
     # Plot a creative 10x3 grid of predictions on test data and log the plot to wandb.
     # --------------------------
     fig, plot_path = plot_predictions(model, test_dataset, class_names, device, grid_shape=(10, 3))
-    wandb.log({"test_predictions_grid": wandb.Image(plot_path)})
+    wandb.log({"part_a_q4_test_predictions_grid": wandb.Image(plot_path)})
 
     run.finish()
 
