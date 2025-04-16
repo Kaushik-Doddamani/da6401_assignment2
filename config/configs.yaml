@@ -13,5 +13,5 @@ solution_2_configs:
 
 solution_4_configs:
   data_root: "inaturalist_data/nature_12K_extracted/inaturalist_12K"
-  wandb_project: "xx"
+  wandb_project: 'ss' # "DA6401_Intro_to_DeepLearning_Assignment_2"
   wandb_run_name: "PartA_Q4_Solution_Best"
