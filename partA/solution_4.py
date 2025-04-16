@@ -26,12 +26,12 @@ best_hparams = {
     "data_augmentation": False,
     "dense_neurons": 256,
     "dropout_rate": 0.3,
-    "epochs": 10,
+    "epochs": 20,
     "filter_organization": "double_each_layer",
     "kernel_size": 3,
     "learning_rate": 0.0001,
-    "num_filters": 16,
-    "resize_dim": 352
+    "num_filters": 32,
+    "resize_dim": 224
 }
 
 
@@ -161,6 +161,10 @@ def train_and_evaluate_best(static_config):
               f"train_loss={train_loss:.4f}, train_acc={train_acc:.4f}, "
               f"val_loss={val_loss:.4f}, val_acc={val_acc:.4f}")
 
+        if val_acc > 0.42:  # Early stopping condition
+            print(f"Validation accuracy: {val_acc:.4f} reached 0.42. Performing early stopping to avoid overfitting.")
+            break
+
     print("Training complete.")
 
     # --------------------------
@@ -176,7 +180,9 @@ def train_and_evaluate_best(static_config):
     # --------------------------
     # Plot a creative 10x3 grid of predictions on test data and log the plot to wandb.
     # --------------------------
-    fig, plot_path = plot_predictions(model, test_dataset, class_names, device, grid_shape=(10, 3))
+    os.makedirs(static_config['output_dir'], exist_ok=True)
+    # Plot predictions and save the figure.
+    fig, plot_path = plot_predictions(model, test_dataset, class_names, device, static_config['output_dir'], grid_shape=(10, 3))
     wandb.log({"part_a_q4_test_predictions_grid": wandb.Image(plot_path)})
 
     run.finish()
