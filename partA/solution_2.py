@@ -123,7 +123,7 @@ def sweep_train():
     # Initialize a W&B run so that wandb.config is available.
     wandb.init()
     sweep_config = wandb.config
-    static_config = get_configs(project_root, 'configs.yaml')['solution_2_configs']
+    static_config = get_configs(project_root, 'configs.yaml')['part_a_configs']['solution_2_configs']
 
     # Construct a run name based on various hyperparameters.
     run_name = (
@@ -216,7 +216,7 @@ def main():
        and log it in a new run called 'correlation_analysis'.
     """
     # Load static config from YAML file
-    static_config = get_configs(project_root, 'configs.yaml')['solution_2_configs']
+    static_config = get_configs(project_root, 'configs.yaml')['part_a_configs']['solution_2_configs']
     # Load sweep config from YAML file
     sweep_config = get_configs(project_root, 'sweep_config.yaml')
 

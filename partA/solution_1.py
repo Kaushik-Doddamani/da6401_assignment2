@@ -12,7 +12,7 @@ if project_root not in sys.path:
 
 from models.implementation import MyCNN
 from utils.data_utils import load_single_image
-from utils.common_utils import extract_data_if_needed
+from utils.common_utils import extract_data_if_needed, get_configs
 
 
 def test_model_with_image(model, image_tensor):
@@ -28,13 +28,11 @@ def test_model_with_image(model, image_tensor):
 
 
 def main():
-    config = None
-    with open(os.path.join(project_root, "config", "configs.yaml"), 'r') as f:
-        config = yaml.safe_load(f)
+    config = get_configs(project_root, 'configs.yaml')['part_a_configs']['solution_1_configs']
 
     # Paths (adjust if necessary)
-    DATA_ZIP_PATH = config['solution_1_configs']['data_zip_path']
-    EXTRACT_DIR = config['solution_1_configs']['extracted_data_dir']
+    DATA_ZIP_PATH = config['data_zip_path']
+    EXTRACT_DIR = config['extracted_data_dir']
 
     # 1) Optional: Extract ZIP if needed
     extract_data_if_needed(DATA_ZIP_PATH, EXTRACT_DIR)

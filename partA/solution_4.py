@@ -82,7 +82,7 @@ def plot_predictions(model, test_dataset, class_names, device, output_dir, grid_
 
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     # Save the figure so that we can log it with wandb
-    output_filepath = f"{output_dir}/part_a_q4_test_predictions_grid.png"
+    output_filepath = f"{output_dir}/partA_Q4_test_predictions_grid.png"
     plt.savefig(output_filepath, dpi=300)
     # Optionally, you can call plt.show() if you want to display the plot interactively.
     plt.show()
@@ -144,6 +144,14 @@ def train_and_evaluate_best(static_config):
     optimizer = optim.Adam(model.parameters(), lr=best_hparams["learning_rate"])
     criterion = nn.CrossEntropyLoss()
 
+    # --- EARLY STOPPING & CHECKPOINT SETUP ---
+    best_val_acc = 0.0
+    epochs_no_improve = 0
+    max_patience = static_config["patience"]
+    os.makedirs(static_config['output_dir'], exist_ok=True)
+    ckpt_path = os.path.join(static_config['output_dir'], "partA_Q4_best_model.pth")
+    # ---------------------------------------------
+
     print("Starting training...")
     # Training loop
     for epoch in range(best_hparams["epochs"]):
@@ -161,11 +169,25 @@ def train_and_evaluate_best(static_config):
               f"train_loss={train_loss:.4f}, train_acc={train_acc:.4f}, "
               f"val_loss={val_loss:.4f}, val_acc={val_acc:.4f}")
 
-        if val_acc > 0.42:  # Early stopping condition
-            print(f"Validation accuracy: {val_acc:.4f} reached 0.42. Performing early stopping to avoid overfitting.")
-            break
+        if static_config["perform_early_stopping"]:
+            # --- checkpoint if improvement ---
+            if val_acc > best_val_acc:
+                best_val_acc = val_acc
+                epochs_no_improve = 0
+                torch.save(model.state_dict(), ckpt_path)
+                print(f"Validation accuracy improved to {val_acc:.4f}. Checkpoint saved.")
+            else:
+                epochs_no_improve += 1
+                print(f"No improvement in validation accuracy for {epochs_no_improve} epoch(s).")
+                if epochs_no_improve >= max_patience:
+                    print(f"Early stopping after {epochs_no_improve} epochs without improvement.")
+                    break
 
     print("Training complete.")
+    if static_config["perform_early_stopping"]:
+        print(f"Loading the model with best validation accuracy: {best_val_acc:.4f}")
+        # load best checkpoint before testing
+        model.load_state_dict(torch.load(ckpt_path))
 
     # --------------------------
     # Evaluate on test data.
@@ -183,11 +205,11 @@ def train_and_evaluate_best(static_config):
     os.makedirs(static_config['output_dir'], exist_ok=True)
     # Plot predictions and save the figure.
     fig, plot_path = plot_predictions(model, test_dataset, class_names, device, static_config['output_dir'], grid_shape=(10, 3))
-    wandb.log({"part_a_q4_test_predictions_grid": wandb.Image(plot_path)})
+    wandb.log({"partA_Q4_test_predictions_grid": wandb.Image(plot_path)})
 
     run.finish()
 
 
 if __name__ == "__main__":
-    config = get_configs(project_root, 'configs.yaml')['solution_4_configs']
+    config = get_configs(project_root, 'configs.yaml')['part_a_configs']['solution_4_configs']
     train_and_evaluate_best(config)
