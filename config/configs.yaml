@@ -22,5 +22,10 @@ part_a_configs:
 
 part_b_configs:
   solution_3_configs:
+    data_root: "inaturalist_data/nature_12K_extracted/inaturalist_12K"
     wandb_project: "test" # "DA6401_Intro_to_DeepLearning_Assignment_2"
     wandb_run_name: "PartB_Q3_Solution_Pretrained"
+    model_configs:
+      resize_dim: 352
+      batch_size: 64
+      
