@@ -69,7 +69,48 @@ DA6401_Intro_to_DeepLearning_Assignment_2/
 
 ## 🔧 Configuration
 
-All paths, hyperparameters, and dataset locations are managed via `config/configs.yaml`:
+All static parameters—file paths, hyperparameters, early‑stopping settings, W&B project configurations—are managed in **`config/configs.yaml`** under two primary keys:
+
+### Part A (`part_a_configs`)
+
+#### solution_1_configs
+- **`data_zip_path`**: Path to the `nature_12K.zip` archive containing the dataset.
+- **`extracted_data_dir`**: Directory where the archive is extracted (should contain `inaturalist_12K/`).
+
+#### solution_2_configs
+- **`data_root`**: Path to the extracted dataset root (with `train/`, `val/`, `test/`).
+- **`gpu_count`**: Number of GPUs for `DataParallel` during the sweep.
+- **`wandb_project`**: W&B project name to log sweep runs.
+- **`wandb_entity`**: W&B user or team name.
+- **`wandb_run_tag`**: Tag added to each sweep run for filtering.
+- **`sweep_count`**: Number of hyperparameter trials to execute.
+- **`correlation_run_name`**: Name of the W&B run that logs the correlation matrix.
+
+#### solution_4_configs
+- **`data_root`**: Path to the extracted dataset.
+- **`wandb_project`**: W&B project for best-from-scratch training.
+- **`wandb_run_name`**: Name for the final training run in Part A Q4.
+- **`output_dir`**: Directory to save checkpoints and plots.
+- **`patience`**: Number of epochs without improvement before early-stopping.
+- **`perform_early_stopping`**: Boolean to enable or disable early-stopping.
+
+### Part B (`part_b_configs`)
+
+#### solution_3_configs
+- **`data_root`**: Path to the extracted dataset root.
+- **`wandb_project`**: W&B project for fine‑tuning runs.
+- **`wandb_run_name`**: Name for the Part B Q3 run.
+- **`output_dir`**: Directory to save the fine‑tuned ResNet checkpoint.
+- **`model_config`**: Nested dictionary for fine‑tuning hyperparameters:
+  - **`resize_dim`**: Input image size (pixels) for train/validation.
+  - **`batch_size`**: Batch size for data loaders.
+  - **`val_ratio`**: Fraction of training split for validation.
+  - **`seed`**: Random seed for reproducibility.
+  - **`learning_rate`**: Base LR for the new head and unfrozen layers.
+  - **`epochs`**: Number of training epochs.
+  - **`freeze_until_layer`**: Number of ResNet blocks (layer1–layer4) to freeze initially.
+  - **`patience`**: Epochs to wait without val‑acc improvement before early-stopping.
+
 
 - **Part A** (scratch): under `part_a_configs` → `solution_1_configs`, `solution_2_configs`, `solution_4_configs`.
 - **Part B** (fine‑tune): under `part_b_configs` → `solution_3_configs`.
