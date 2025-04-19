@@ -18,6 +18,8 @@ from utils.model_utils import train_one_epoch, validate_one_epoch, evaluate_mode
 from data.data_loader import load_inaturalist_train_val_data, load_inaturalist_test_data
 from models.implementation import MyCNNExtended
 
+os.environ["CUDA_VISIBLE_DEVICES"] = "3"  # Set to the GPU you want to use
+
 # Best hyperparameters provided.
 best_hparams = {
     "activation_fn": "mish",
@@ -145,10 +147,10 @@ def train_and_evaluate_best(static_config):
     criterion = nn.CrossEntropyLoss()
 
     # --- EARLY STOPPING & CHECKPOINT SETUP ---
-    best_val_acc = 0.0
+    best_val_acc = float('-inf')
     epochs_no_improve = 0
     max_patience = static_config["patience"]
-    os.makedirs(static_config['output_dir'], exist_ok=True)
+     
     ckpt_path = os.path.join(static_config['output_dir'], "partA_Q4_best_model.pth")
     # ---------------------------------------------
 

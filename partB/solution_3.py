@@ -17,6 +17,8 @@ if project_root not in sys.path:
 from utils.common_utils import set_seeds, get_configs
 from utils.model_utils import train_one_epoch, validate_one_epoch
 
+os.environ['CUDA_VISIBLE_DEVICES'] = '3'  # Set to the GPU you want to use
+
 def get_data_loaders(data_root, resize_dim, batch_size, val_ratio=0.2, seed=42):
     """
     Prepare train and validation DataLoaders with a stratified split.
@@ -105,39 +107,47 @@ def evaluate_on_test(model, data_root, resize_dim, batch_size, device):
     return correct / total
 
 def main(static_config):
-    # Configuration
-    # data_root    = "../inaturalist_data/inaturalist_12K_extracted/inaturalist_12K"
-    resize_dim   = 352
-    batch_size   = 64
-    val_ratio    = 0.2
-    seed         = 42
-    lr           = 1e-4
-    epochs       = 10
-    freeze_until = 3  # freeze layers 1..3, unfreeze layer4 + fc
+    model_config = static_config['model_config']
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    set_seeds(seed)
+    set_seeds(model_config['seed'])
 
     # Prepare data loaders
     train_loader, val_loader, class_names = get_data_loaders(
-        static_config['data_root'], resize_dim, batch_size, val_ratio, seed
+        data_root=static_config['data_root'], 
+        resize_dim=model_config['resize_dim'], 
+        batch_size=model_config['batch_size'], 
+        val_ratio=model_config['val_ratio'], 
+        seed=model_config['seed']
     )
     num_classes = len(class_names)
+    print("Successfully loaded data.")
+    print(f"Number of classes: {num_classes}")
 
     # Build model for fine‑tuning
-    model = build_finetune_resnet50(num_classes, freeze_until_layer=freeze_until)
+    model = build_finetune_resnet50(num_classes, freeze_until_layer=model_config['freeze_until_layer'])
     if torch.cuda.device_count() > 1:
         print(f"Using {torch.cuda.device_count()} GPUs with DataParallel")
         model = nn.DataParallel(model)
     model = model.to(device)
+    print("Successfully built model.")
+    print(f"Model architecture:\n{model}")
 
-    # Optimizer: only parameters with requires_grad=True
+    # # Optimizer: only parameters with requires_grad=True
     optimizer = optim.Adam(
         filter(lambda p: p.requires_grad, model.parameters()),
-        lr=lr
+        lr=model_config['learning_rate'],
     )
     criterion = nn.CrossEntropyLoss()
+    print("Successfully set up optimizer and loss function.")
+    
+    patience = static_config["patience"]
+    best_val_acc = float('-inf')
+    patience_counter = 0
+    os.makedirs(static_config['output_dir'], exist_ok=True)
+    best_model_path = os.path.join(static_config["output_dir"], "partB_Q3_best_resnet50.pth")
 
+    epochs = model_config['epochs']
     # Training loop
     for epoch in range(1, epochs+1):
         train_loss, train_acc = train_one_epoch(model, train_loader, optimizer, criterion, device)
@@ -146,10 +156,32 @@ def main(static_config):
               f"Train Loss: {train_loss:.3f}, Train Acc: {train_acc:.3f} | "
               f"Val Loss:   {val_loss:.3f}, Val Acc:   {val_acc:.3f}")
 
+        # --- Early Stopping Logic ---
+        if val_acc > best_val_acc:   # slight delta to avoid float issues
+            best_val_acc = val_acc
+            patience_counter = 0
+            # Save the best model weights
+            torch.save(model.state_dict(), best_model_path)
+            print(f"Validation accuracy improved to {best_val_acc:.3f}. Checkpoint saved.")
+        else:
+            patience_counter += 1
+            print(f"No improvement in validation accuracy for {patience_counter} epoch(s).")
+            if patience_counter >= patience:
+                print(f"Stopping early at epoch {epoch}. Best val_scc={best_val_acc:.3f}")
+                break
+    
+    print(f"Training completed. Best model saved at {best_model_path}")
+    print(f"Best validation accuracy: {best_val_acc:.3f}")
+    
+    # Load the best weights before final evaluation
+    print("Loading the best model for final evaluation...")
+    model.load_state_dict(torch.load(best_model_path))
+
     # Evaluate on test set
-    test_acc = evaluate_on_test(model, static_config['data_root'], resize_dim, batch_size, device)
+    test_acc = evaluate_on_test(model, static_config['data_root'], model_config['resize_dim'], model_config['batch_size'], device)
     print(f"\nTest Accuracy: {test_acc*100:.2f}%")
 
 if __name__ == "__main__":
     config = get_configs(project_root, "configs.yaml")['part_b_configs']['solution_3_configs']
     main(config)
+ 
