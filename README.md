@@ -9,7 +9,7 @@ This repository contains a complete implementation for the iNaturalist 12K class
 
 The codebase is organized into Python modules, YAML configuration files, and Jupyter notebooks for interactive exploration.
 
-Wandb Project: (link)[https://wandb.ai/da24s020-indian-institute-of-technology-madras/DA6401_Intro_to_DeepLearning_Assignment_2/reports/DA6401-Assignment-2--VmlldzoxMjMxODA4Mw?accessToken=n3jv7pu7k48k0q6503sooe6jfvn4sjjlepamilnanl3m97fckdx39mudcmb1xpqv]
+Wandb Project: [link](https://wandb.ai/da24s020-indian-institute-of-technology-madras/DA6401_Intro_to_DeepLearning_Assignment_2/reports/DA6401-Assignment-2--VmlldzoxMjMxODA4Mw?accessToken=n3jv7pu7k48k0q6503sooe6jfvn4sjjlepamilnanl3m97fckdx39mudcmb1xpqv)
 
 ---
 
