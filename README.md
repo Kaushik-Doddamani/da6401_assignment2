@@ -2,7 +2,7 @@
 
 ## 📁 Project Overview
 
-This repository contains a complete implementation for the iNaturalist 12K classification assignment (DA6401) at IIT Madras. It covers:
+This repository contains a complete implementation for the iNaturalist 12K classification assignment for course: DA6401 Introduciton to Deep Learning, IIT Madras. It covers:
 
 - **Part A**: Training a custom CNN from scratch, including hyperparameter sweeps.
 - **Part B**: Fine‑tuning a pre‑trained ResNet‑50 with a progressive freeze/unfreeze strategy.
@@ -22,18 +22,13 @@ DA6401_Intro_to_DeepLearning_Assignment_2/
 ├─ data/
 │  └─ data_loader.py       # Lightning and custom DataLoader utilities
 │
-├─ inaturalist_data/
-│  ├─ nature_12K.zip
-│  └─ nature_12K_extracted/ # Contains `train/`, `val/`, `test/` subfolders
-│
 ├─ models/
 │  ├─ implementation.py    # MyCNN and MyCNNExtended architectures
 │  └─ wrapper.py           # PyTorch Lightning wrapper (LitInatModel)
 │
 ├─ notebooks/
 │  ├─ partA.ipynb          # Interactive walkthrough for Part A
-│  ├─ partA_copy.ipynb     # Backup of the initial notebook
-│  └─ inat_sweep_demo2.ipynb # Demo of W&B sweep
+│  ├─ partB.ipynb     # Interactive walkthrough for Part B
 │
 ├─ partA/
 │  ├─ solution_1.py        # Single-image inference (MyCNN)
@@ -127,13 +122,13 @@ All training/validation curves and confusion matrices are logged to W&B under th
 
 For an **interactive walkthrough**, open:
 - `notebooks/partA.ipynb` – covers data loading, model definition, training loops for Part A.
-- `notebooks/inat_sweep_demo2.ipynb` – demonstrates setting up and monitoring a W&B sweep.
+- `notebooks/partB.ipynb` – covers data loading, model definition, training loops for Part B.
 
 ---
 
 ## 📖 Further Notes
 
-- Ensure the dataset is unzipped under `inaturalist_data/nature_12K_extracted/` with `train/`, `val/`, and `test/` folders.
+- Ensure the dataset is unzipped under `inaturalist_data/nature_12K_extracted/` with `train/`, and `test/` folders.
 - Adjust `CUDA_VISIBLE_DEVICES` in each script to match your GPU setup.
 - Use `utils/common_utils.py` to modify random seed or activation mappings globally.
 
