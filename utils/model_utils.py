@@ -67,3 +67,19 @@ def evaluate_model_on_test_data(model, test_loader, device):
             correct += (preds == labels).sum().item()
             total += labels.size(0)
     return correct / total
+
+
+def evaluate_resnet_on_test(model, test_loader, device):
+    # compute test accuracy + confusion data
+    y_true, y_pred = [], []
+    model.eval()
+    with torch.no_grad():
+        for x, y in test_loader:
+            x, y = x.to(device), y.to(device)
+            logits = model(x)
+            preds  = logits.argmax(dim=1)
+            y_true.extend(y.cpu().tolist())
+            y_pred.extend(preds.cpu().tolist())
+
+    test_acc = sum(int(t==p) for t,p in zip(y_true, y_pred)) / len(y_true)
+    return y_true, y_pred, test_acc

@@ -59,7 +59,7 @@ def build_finetune_resnet50(num_classes, freeze_until_layer=3):
     unfreeze the rest (including the final fc), then replace fc for num_classes.
     freeze_until_layer = number of ResNet 'layerX' modules to freeze: 0..4
     """
-    model = torchvision.models.resnet50(pretrained=True)
+    model = torchvision.models.resnet50(weights="IMAGENET1K_V2")
 
     # Freeze all parameters first
     for param in model.parameters():
@@ -131,7 +131,6 @@ def main(static_config):
         model = nn.DataParallel(model)
     model = model.to(device)
     print("Successfully built model.")
-    print(f"Model architecture:\n{model}")
 
     # # Optimizer: only parameters with requires_grad=True
     optimizer = optim.Adam(
@@ -145,7 +144,7 @@ def main(static_config):
     best_val_acc = float('-inf')
     patience_counter = 0
     os.makedirs(static_config['output_dir'], exist_ok=True)
-    best_model_path = os.path.join(static_config["output_dir"], "partB_Q3_best_resnet50.pth")
+    best_model_path = os.path.join(static_config["output_dir"], "partB_Q3_best_resnet50_old.pth")
 
     epochs = model_config['epochs']
     # Training loop

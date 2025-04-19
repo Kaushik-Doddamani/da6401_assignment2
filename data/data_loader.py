@@ -4,6 +4,7 @@ import torch
 from torch.utils.data import DataLoader
 import torchvision
 import torchvision.transforms as T
+from torchvision.datasets import ImageFolder
 import pytorch_lightning as pl
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -112,6 +113,57 @@ def load_inaturalist_test_data(test_dir, resize_dim):
     test_dataset = torchvision.datasets.ImageFolder(root=test_dir, transform=transform)
     class_names = test_dataset.classes
     return test_dataset, class_names
+
+
+def _build_transforms(img_size=224):
+    train_tfms = T.Compose([
+        T.RandomResizedCrop(img_size, scale=(0.6, 1.0), ratio=(0.75, 1.33)),
+        T.RandomHorizontalFlip(),
+        T.ColorJitter(0.2, 0.2, 0.2, 0.1),
+        T.RandomErasing(p=0.1, scale=(0.02, 0.08)),
+        T.ToTensor(),
+        T.Normalize([0.485,0.456,0.406], [0.229,0.224,0.225]),
+    ])
+    val_tfms = T.Compose([
+        T.Resize(int(img_size * 1.15)),
+        T.CenterCrop(img_size),
+        T.ToTensor(),
+        T.Normalize([0.485,0.456,0.406], [0.229,0.224,0.225]),
+    ])
+    return train_tfms, val_tfms
+
+
+def get_train_val_data_loaders(data_root, img_size, batch_size, val_ratio=0.2, seed=42):
+    train_tfms, val_tfms = _build_transforms(img_size)
+
+    full_ds = ImageFolder(root=os.path.join(data_root, "train"),
+                          transform=train_tfms)
+    labels  = full_ds.targets
+    indices = list(range(len(full_ds)))
+
+    train_idx, val_idx = train_test_split(
+        indices, test_size=val_ratio, stratify=labels, random_state=seed
+    )
+
+    train_ds = torch.utils.data.Subset(full_ds, train_idx)
+    val_ds   = torch.utils.data.Subset(full_ds, val_idx)
+    # override the transform on the val subset
+    val_ds.dataset.transform = val_tfms  # deterministic pipeline for val
+
+    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True,
+                              num_workers=4, pin_memory=True)
+    val_loader   = DataLoader(val_ds,   batch_size=batch_size, shuffle=False,
+                              num_workers=4, pin_memory=True)
+
+    return train_loader, val_loader, full_ds.classes
+
+
+def get_test_data_loader(data_root, img_size, batch_size):
+    _, val_tfms = _build_transforms(img_size)
+    test_ds = ImageFolder(root=os.path.join(data_root, "test"),
+                          transform=val_tfms)
+    return DataLoader(test_ds, batch_size=batch_size,
+                      shuffle=False, num_workers=4, pin_memory=True)
 
 
 class InatDataModule(pl.LightningDataModule):
