@@ -4,7 +4,7 @@ import sys
 import torch.nn as nn
 import yaml
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 print(f"CUDA_VISIBLE_DEVICES: {os.environ['CUDA_VISIBLE_DEVICES']}")
 
 # Ensure the project root is in sys.path
@@ -16,8 +16,6 @@ if project_root not in sys.path:
 from models.implementation import MyCNN
 from utils.data_utils import load_single_image
 from utils.common_utils import extract_data_if_needed, get_configs
-
-torch.multiprocessing.set_sharing_strategy('file_system')
 
 def test_model_with_image(model, image_tensor):
     """

@@ -16,7 +16,7 @@ from utils.common_utils import set_seeds, get_configs
 from data.data_loader import get_train_val_data_loaders, get_test_data_loader
 from utils.model_utils import train_one_epoch, validate_one_epoch, evaluate_resnet_on_test
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "3"   # select your GPU
+os.environ["CUDA_VISIBLE_DEVICES"] = "3"   # select GPU
 
 
 # ------------------------------------------------------------------
