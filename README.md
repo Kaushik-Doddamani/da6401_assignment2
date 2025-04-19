@@ -30,7 +30,7 @@ DA6401_Intro_to_DeepLearning_Assignment_2/
 │
 ├─ notebooks/
 │  ├─ partA.ipynb          # Interactive walkthrough for Part A
-│  ├─ partB.ipynb     # Interactive walkthrough for Part B
+│  ├─ partB.ipynb          # Interactive walkthrough for Part B
 │
 ├─ partA/
 │  ├─ solution_1.py        # Single-image inference (MyCNN)
