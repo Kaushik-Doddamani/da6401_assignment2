@@ -28,7 +28,7 @@ DA6401_Intro_to_DeepLearning_Assignment_2/
 │  ├─ implementation.py    # MyCNN and MyCNNExtended architectures
 │  └─ wrapper.py           # PyTorch Lightning wrapper (LitInatModel)
 │
-├─ notebooks/
+├─ notebooks/              # Original .ipynb files can be found here
 │  ├─ partA.ipynb          # Interactive walkthrough for Part A
 │  ├─ partB.ipynb          # Interactive walkthrough for Part B
 │
